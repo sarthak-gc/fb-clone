@@ -15,7 +15,7 @@ enum RelationShip {
 }
 type userT = {
   firstName: string;
-  lastName: string;
+  lastName?: string;
   birthday: Date;
   gender: Gender;
   email: string;
@@ -35,7 +35,7 @@ type userT = {
 const User = new mongoose.Schema<userT>(
   {
     firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
+    lastName: { type: String },
     birthday: { type: Date, required: true },
     gender: { type: String, enum: Object.values(Gender), required: true },
     email: { type: String, required: true },
@@ -66,3 +66,5 @@ const User = new mongoose.Schema<userT>(
 const UserModel = mongoose.model<userT>("user", User);
 
 export default UserModel;
+
+export { Gender, RelationShip };

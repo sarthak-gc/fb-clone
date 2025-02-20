@@ -7,12 +7,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-enum Purpose {
+export enum Purpose {
   Registration = "registration",
   PasswordReset = "passwordReset",
 }
 
-const getHtmlTemplate = (purpose: Purpose, otp?: string) => {
+const getHtmlTemplate = (purpose: Purpose, otp: number) => {
   switch (purpose) {
     case Purpose.Registration:
       return `
@@ -42,7 +42,7 @@ export const sendMail = async (
   receiver: string,
   subject: string,
   purpose: Purpose,
-  otp: string
+  otp: number
 ) => {
   const htmlContent = getHtmlTemplate(purpose, otp);
   const info = await transporter.sendMail({
