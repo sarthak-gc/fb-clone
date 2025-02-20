@@ -1,18 +1,22 @@
 import express from "express";
+import {
+  acceptRequest,
+  getAllFriend,
+  getAllRequests,
+  rejectRequest,
+  searchUser,
+  sendRequest,
+  unfriend,
+} from "../controllers/connection.controllers";
 const connectionRoutes = express.Router();
 
 connectionRoutes.post("/request/:userId");
-// POST /friends/request/:userId: Send a friend request to another user.
-// GET /friends/requests: View pending friend requests.
-// POST /friends/accept/:userId: Accept a pending friend request.
-// POST /friends/reject/:userId: Reject a pending friend request.
-// DELETE /friends/:userId: Unfriend a user.
-// GET /friends: List all friends of the logged-in user.
-connectionRoutes.get("/requests/");
-connectionRoutes.post("/accept/:userId");
-connectionRoutes.post("/reject/:userId");
-connectionRoutes.delete("/reject/:userId");
 
-connectionRoutes.get("/all");
-
+connectionRoutes.post("/request/:userId", sendRequest);
+connectionRoutes.get("/requests/", getAllRequests);
+connectionRoutes.post("/accept/:userId", acceptRequest);
+connectionRoutes.post("/reject/:userId", rejectRequest);
+connectionRoutes.get("/search/user/:name", searchUser);
+connectionRoutes.delete("/remove/:userId", unfriend);
+connectionRoutes.get("/all", getAllFriend);
 export default connectionRoutes;

@@ -1,9 +1,12 @@
 import express from "express";
-const messageRoutes = express();
+const messageRoutes = express.Router();
 
-// POST /messages: Send a new message to a user or group.
-// GET /messages: Retrieve all messages between the logged-in user and their friends.
-// GET /messages/:conversationId: Retrieve messages from a specific conversation.
-// POST /messages/:conversationId/read: Mark messages as read in a conversation.
+// messageRoutes.post("/:id", sendMessage);
+
+// messageRoutes.get("/", getAllMessages);
+
+// messageRoutes.get("/:id", getSpecificMessage);
+
+// messageRoutes.post("/:id/read", markAsRead);
 
 export default messageRoutes;

@@ -1,13 +1,28 @@
 import express from "express";
 const postRoutes = express.Router();
 
-// POST /posts: Create a new post.
-// GET /posts: Retrieve all posts (or specific posts based on user, friends, etc.).
-// GET /posts/:postId: View a specific post by its ID.
-// PUT /posts/:postId: Edit a post.
-// DELETE /posts/:postId: Delete a post.
-// POST /posts/:postId/like: Like a post.
-// POST /posts/:postId/comment: Add a comment to a post.
-// GET /posts/:postId/comments: Get all comments for a specific post.
+import {
+  createPost,
+  getAllPost,
+  getUserPosts,
+  getPost,
+  editPost,
+  deletePost,
+  likePost,
+  getLikeCount,
+  addPostComment,
+  getPostComments,
+} from "../controllers/post.controllers";
+
+postRoutes.post("/posts/create", createPost);
+postRoutes.get("/posts", getAllPost);
+postRoutes.get("/posts/:userId", getUserPosts);
+postRoutes.get("/posts/:postId", getPost);
+postRoutes.put("/posts/:postId", editPost);
+postRoutes.delete("/posts/:postId", deletePost);
+postRoutes.post("/posts/:postId/like", likePost);
+postRoutes.get("/posts/:postId/like", getLikeCount);
+postRoutes.post("/posts/:postId/comment", addPostComment);
+postRoutes.get("/posts/:postId/comments/", getPostComments);
 
 export default postRoutes;
