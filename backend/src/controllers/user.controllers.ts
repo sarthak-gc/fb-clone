@@ -112,6 +112,7 @@ const userLogin = async (req: Request, res: Response) => {
 
   res.status(200).json({ message: "Login successful", token });
 };
+
 const updatePersonalInfo = async (req: Request, res: Response) => {
   console.log("updatePersonalInfo");
 

@@ -12,7 +12,7 @@ const comment = new mongoose.Schema<commentT>(
     post: { type: mongoose.Schema.Types.ObjectId, ref: "Post" },
     commenter: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     replies: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
-    reactions: { type: Number },
+    reactions: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

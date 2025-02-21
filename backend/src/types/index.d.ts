@@ -1,11 +1,11 @@
-import { JwtPayload } from "jsonwebtoken";
+import mongoose from "mongoose";
 
 export {};
 
 declare global {
   namespace Express {
     interface Request {
-      id: JwtPayload | string;
+      id: mongoose.Types.ObjectId | string;
       email: string;
     }
   }

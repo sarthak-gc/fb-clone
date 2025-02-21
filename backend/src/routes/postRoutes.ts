@@ -15,7 +15,9 @@ import {
 } from "../controllers/post.controllers";
 
 postRoutes.post("/posts/create", createPost);
+
 postRoutes.get("/posts", getAllPost);
+
 postRoutes.get("/posts/:userId", getUserPosts);
 postRoutes.get("/posts/:postId", getPost);
 postRoutes.put("/posts/:postId", editPost);
