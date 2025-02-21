@@ -14,17 +14,17 @@ import {
   getPostComments,
 } from "../controllers/post.controllers";
 
-postRoutes.post("/posts/create", createPost);
+// import authorizationMiddleware from "../middlewares/authorizationMiddleware";
 
-postRoutes.get("/posts", getAllPost);
-
-postRoutes.get("/posts/:userId", getUserPosts);
-postRoutes.get("/posts/:postId", getPost);
-postRoutes.put("/posts/:postId", editPost);
-postRoutes.delete("/posts/:postId", deletePost);
-postRoutes.post("/posts/:postId/like", likePost);
-postRoutes.get("/posts/:postId/like", getLikeCount);
-postRoutes.post("/posts/:postId/comment", addPostComment);
-postRoutes.get("/posts/:postId/comments/", getPostComments);
+postRoutes.post("/create", createPost);
+postRoutes.get("/getall", getAllPost);
+postRoutes.get("/:postId", getPost);
+postRoutes.get("/user/:userId", getUserPosts);
+postRoutes.put("/:postId", editPost);
+postRoutes.delete("/:postId", deletePost);
+postRoutes.post("/:postId/like", likePost);
+postRoutes.get("/:postId/like", getLikeCount);
+postRoutes.post("/:postId/comments", addPostComment);
+postRoutes.get("/:postId/comments/", getPostComments);
 
 export default postRoutes;

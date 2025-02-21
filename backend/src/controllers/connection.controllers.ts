@@ -43,13 +43,20 @@ const sendRequest = async (req: Request, res: Response) => {
     message: "Request sent successfully",
     data: { sender, receiver },
   });
+  await FriendReqReceivedModel.create({ sender, receiver });
+  res.status(200).json({
+    status: "success",
+    message: "Request sent successfully",
+    data: { sender, receiver },
+  });
 };
 
 const getAllRequests = async (req: Request, res: Response) => {
   const id = req.id;
+
   const allRequests = await FriendReqReceivedModel.find({
     receiver: id,
-  });
+  }).select("-_id -__v -updatedAt -receiver");
 
   if (allRequests.length === 0) {
     res.json({
@@ -70,29 +77,49 @@ const getAllRequests = async (req: Request, res: Response) => {
 };
 
 const acceptRequest = async (req: Request, res: Response) => {
-  const { userId: sender } = req.body;
+  const { userId: sender } = req.params;
   const receiver = req.id;
-  const friendReq = await FriendReqSentModel.findOne({ sender, receiver });
+  const friendReq = await FriendReqSentModel.findOne({
+    sender,
+    receiver,
+    status: ReqSentStatus.Sent,
+  });
 
   if (!friendReq) {
     res.status(404).json({ status: "error", message: "No request found" });
     return;
   }
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // const session = await mongoose.startSession();
+  // session.startTransaction();
+
+  const connectionExists = await FriendModel.findOne({
+    $or: [
+      { user1: sender, user2: receiver },
+      { user1: receiver, user2: sender },
+    ],
+  });
+
+  console.log(connectionExists);
+
+  if (connectionExists) {
+    res
+      .status(400)
+      .json({ status: "error", message: "Connection Already exists" });
+    return;
+  }
+
   const friends = await FriendModel.create(
     {
       user1: sender,
       user2: receiver,
       friendShipStatus: FriendShipStatus.Active,
-    },
+    }
 
-    { session }
+    // { session }
   );
-
   if (!friends) {
-    await session.abortTransaction();
+    // await session.abortTransaction();
     res
       .status(400)
       .json({ status: "error", message: "Invalid request received" });
@@ -100,21 +127,20 @@ const acceptRequest = async (req: Request, res: Response) => {
   }
 
   //  delete the values from these model on acceptance? or just update this?
-  await Promise.all([
-    FriendReqSentModel.findOneAndUpdate(
-      { sender, receiver },
-      { status: ReqSentStatus.Accepted },
-      { session }
-    ),
-    FriendReqReceivedModel.findOneAndUpdate(
-      { sender, receiver },
-      { status: ReqReceived.Accepted },
-      { session }
-    ),
-  ]);
 
-  await session.commitTransaction();
-  session.endSession();
+  await FriendReqSentModel.findOneAndUpdate(
+    { sender, receiver },
+    { status: ReqSentStatus.Accepted }
+  );
+  // ).session(session);
+
+  await FriendReqReceivedModel.findOneAndUpdate(
+    { sender, receiver },
+    { status: ReqReceived.Accepted }
+  );
+  // ).session(session);
+  // await session.commitTransaction();
+  // session.endSession();
   res.status(200).json({
     status: "success",
     message: "Request accepted",
@@ -126,35 +152,39 @@ const acceptRequest = async (req: Request, res: Response) => {
 };
 
 const rejectRequest = async (req: Request, res: Response) => {
-  const { userId: sender } = req.body;
+  const { userId: sender } = req.params;
   const receiver = req.id;
-  const friendReq = await FriendReqSentModel.findOne({ sender, receiver });
+  const friendReq = await FriendReqSentModel.findOne({
+    sender,
+    receiver,
+    status: ReqSentStatus.Sent,
+  });
 
   if (!friendReq) {
     res.json({ status: "error", message: "No request found" });
     return;
   }
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // const session = await mongoose.startSession();
+  // session.startTransaction();
 
   //  delete the values from these model on rejection? or just update this?
-  await Promise.all([
-    FriendReqSentModel.findOneAndUpdate(
-      { sender, receiver },
-      { status: ReqSentStatus.Rejected },
-      { session }
-    ),
-    await FriendReqReceivedModel.findOneAndUpdate(
-      { sender, receiver },
-      { status: ReqReceived.Rejected },
-      { session }
-    ),
-  ]);
-  await session.commitTransaction();
+  // await Promise.all([
+  await FriendReqSentModel.findOneAndUpdate(
+    { sender, receiver },
+    { status: ReqSentStatus.Rejected }
+    // { session }
+  );
+  await FriendReqReceivedModel.findOneAndUpdate(
+    { sender, receiver },
+    { status: ReqReceived.Rejected }
+    // { session }
+  );
+
+  // await session.commitTransaction();
 
   res.json({
     status: "success",
-    message: "Request accepted",
+    message: "Request rejected",
     data: {
       sender,
       receiver,
@@ -173,6 +203,7 @@ const searchUser = async (req: Request, res: Response) => {
   const users = await UserModel.find({
     $or: [{ firstName: regex }, { lastName: regex }],
   }).select("-email -password");
+
   if (users.length === 0) {
     res.status(404).json({ status: "error", message: "User not found" });
     return;
@@ -220,10 +251,11 @@ const getAllFriend = async (req: Request, res: Response) => {
       { friendShipStatus: FriendShipStatus.Active },
       { $or: [{ user1: user1 }, { user2: user1 }] },
     ],
-  });
+  }).select("user1 user2 createdAt  friendShipStatus blockedBy");
 
   if (connection.length == 0) {
     res.status(400).json({ status: "error", message: "No Friends Found" });
+    return;
   }
 
   res.status(200).json({

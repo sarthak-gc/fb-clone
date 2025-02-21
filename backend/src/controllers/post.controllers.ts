@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import PostModel, { postT } from "../models/PostModel";
 import CommentModel from "../models/CommentModel";
 import mongoose from "mongoose";
+import UserModel from "../models/UserModel";
 
 const createPost = async (req: Request, res: Response) => {
   const { postContent } = req.body;
@@ -15,16 +16,28 @@ const createPost = async (req: Request, res: Response) => {
 
   const post = await PostModel.create({ owner: req.id, content: postContent });
 
+  await UserModel.findByIdAndUpdate(
+    { _id: req.id },
+    { $push: { posts: post._id } }
+  );
+
+  if (!post) {
+    res.status(400).json({ status: "error", message: "Error creating post" });
+    return;
+  }
   res.status(200).json({
     status: "success",
     message: "Post created successfully",
-    data: { post },
+    data: { content: postContent },
   });
 };
+
 const getAllPost = async (req: Request, res: Response) => {
   // ! do something to handle pagination or filtering .
-  const post = await PostModel.find({});
-  if (!post) {
+  const post = await PostModel.find({}).select(
+    "-_id -createdAt -updatedAt -__v"
+  );
+  if (post.length == 0) {
     res.status(200).json({
       status: "success",
       message: "No Posts found",
@@ -48,7 +61,7 @@ const getUserPosts = async (req: Request, res: Response) => {
     res.status(400).json({ status: "error", message: "User id is required" });
     return;
   }
-  const post = await PostModel.find({ owner: userId });
+  const post = await PostModel.find({ owner: userId }).select("-_id -__v");
   if (!post) {
     res.status(404).json({ status: "error", message: "Post not found" });
     return;
@@ -84,7 +97,15 @@ const editPost = async (req: Request, res: Response) => {
     res.status(400).json({ status: "error", message: "Post id required" });
     return;
   }
+  if (!postContent) {
+    res
+      .status(400)
+      .json({ status: "error", message: "Post content is required" });
+    return;
+  }
+
   const post = (await PostModel.findOne({ _id: postId })) as postT;
+  console.log(post);
   if (!post) {
     res.status(404).json({ status: "error", message: "Post not found" });
     return;
@@ -96,6 +117,7 @@ const editPost = async (req: Request, res: Response) => {
       .json({ status: "error", message: "Unauthorized to edit this post" });
     return;
   }
+
   if (post.content === postContent) {
     res
       .status(400)
@@ -169,6 +191,14 @@ const likePost = async (req: Request, res: Response) => {
     res.status(404).json({ status: "error", message: "Post not found" });
     return;
   }
+
+  if (userId.toString() === post.owner.toString()) {
+    res
+      .status(400)
+      .json({ status: "error", message: "You cannot like your own post" });
+    return;
+  }
+
   if (post.reactors.includes(userId)) {
     res
       .status(411)
@@ -207,17 +237,32 @@ const getLikeCount = async (req: Request, res: Response) => {
     return;
   }
 
+  const reactors = post.reactors;
+
+  let reactorsList = [];
+
+  reactorsList = await Promise.all(
+    reactors.map(async (elem) => {
+      const reactor = await UserModel.findOne({ _id: elem }).select(
+        "firstName lastName"
+      );
+      return reactor;
+    })
+  );
+
   res.json({
     status: "success",
-    message: "Post received successfully",
-    data: { reactions: post.reactions },
+    message: "Like count received successfully",
+    data: { reactors: reactorsList, reactions: post.reactions },
   });
 };
 
 const addPostComment = async (req: Request, res: Response) => {
   const userId = req.id;
-  const { postId } = req.body;
+  const { postId } = req.params;
   const { comment } = req.body;
+
+  console.log(userId, postId, comment);
 
   if (!userId) {
     res.status(404).json({ status: "error", message: "User does not exist" });
@@ -231,17 +276,20 @@ const addPostComment = async (req: Request, res: Response) => {
     res.status(400).json({ status: "error", message: "Comment  is necessary" });
     return;
   }
+  const postComment = await CommentModel.create({
+    content: comment,
+    post: postId,
+    commenter: userId,
+  });
 
+  const neededInformation = await CommentModel.findOne({
+    _id: postComment._id,
+  }).select("-replies -reactions -_id -createdAt -updatedAt -__v");
   const post = await PostModel.findOneAndUpdate(
     { _id: postId },
-    { $push: { comments: { user: userId, comment } } },
-    { new: true, runValidators: true }
+    { $push: { comments: postComment._id } },
+    { new: true }
   );
-
-  const postComment = await CommentModel.create({
-    commenter: userId,
-    post: postId,
-  });
 
   if (!post) {
     res.status(404).json({ status: "error", message: "Post not found" });
@@ -252,8 +300,7 @@ const addPostComment = async (req: Request, res: Response) => {
     status: "success",
     message: "Comment added successfully",
     data: {
-      comment: postComment,
-      post,
+      comment: neededInformation,
     },
   });
 };
@@ -265,7 +312,9 @@ const getPostComments = async (req: Request, res: Response) => {
     return;
   }
 
-  const comments = await CommentModel.find({ post: postId });
+  const comments = await CommentModel.find({ post: postId }).select(
+    "-_id -post  -__v -updatedAt "
+  );
 
   if (!comments) {
     res.json({

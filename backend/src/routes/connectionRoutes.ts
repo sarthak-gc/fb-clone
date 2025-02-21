@@ -9,16 +9,19 @@ import {
   sendRequest,
   unfriend,
 } from "../controllers/connection.controllers";
+// import authorizationMiddleware from "../middlewares/authorizationMiddleware";
+
 const connectionRoutes = express.Router();
 
-connectionRoutes.post("/request/:userId");
-
 connectionRoutes.post("/request/:userId", sendRequest);
-connectionRoutes.get("/requests/", getAllRequests);
+
 connectionRoutes.post("/accept/:userId", acceptRequest);
-connectionRoutes.post("/reject/:userId", rejectRequest);
 connectionRoutes.get("/search/user/:name", searchUser);
-connectionRoutes.delete("/remove/:userId", unfriend);
-connectionRoutes.get("/block/:userId", blockPerson);
 connectionRoutes.get("/all", getAllFriend);
+
+// connectionRoutes.use(authorizationMiddleware);
+connectionRoutes.get("/requests/", getAllRequests);
+connectionRoutes.post("/reject/:userId", rejectRequest);
+connectionRoutes.delete("/remove/:userId", unfriend);
+connectionRoutes.post("/block/:userId", blockPerson);
 export default connectionRoutes;

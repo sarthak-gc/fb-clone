@@ -1,24 +1,26 @@
 import { Request, Response } from "express";
 import UserModel from "../models/UserModel";
 
-const getProfile = async (req: Request, res: Response) => {
-  const { id } = req.params;
+const getPersonalProfile = async (req: Request, res: Response) => {
+  const id = req.id;
   if (!id) {
-    res.status(411).json({ message: "Id is expected" });
+    res.status(411).json({ status: "error", message: "Id is expected" });
     return;
   }
 
-  // get user without email and password;
-
-  const user = await UserModel.findOne({ _id: id });
+  const personalInfo = "-id  -password  -createdAt -updatedAt -__v";
+  const user = await UserModel.findOne({ _id: id }).select(personalInfo);
 
   if (!user) {
-    res.status(404).json({ message: "User not found" });
+    res.status(404).json({ status: "error", message: "User not found" });
     return;
   }
 
-  res.json({ message: "User found", user });
+  res
+    .status(200)
+    .json({ status: "success", message: "User found", data: { user } });
 };
+
 const updateBio = async (req: Request, res: Response) => {
   const { bio } = req.body;
 
@@ -28,20 +30,25 @@ const updateBio = async (req: Request, res: Response) => {
   }
 
   const updatedBio = await UserModel.findOneAndUpdate(
-    { id: req.id },
+    { _id: req.id },
     { bio },
-    { new: true, runValidators: true }
+    { new: true }
   ).select("bio");
 
   if (!updatedBio) {
-    res.status(404).json({ message: "User not found" });
+    res.status(404).json({ status: "error", message: "User not found" });
     return;
   }
 
-  res
-    .status(200)
-    .json({ message: "Bio updated successfully", bio: updatedBio });
+  res.status(200).json({
+    status: "success",
+    message: "Bio updated successfully",
+    data: {
+      bio: updatedBio.bio,
+    },
+  });
 };
+
 const updateProfilePicture = async (req: Request, res: Response) => {
   const { profilePicture } = req.body;
 
@@ -62,4 +69,4 @@ const updateProfilePicture = async (req: Request, res: Response) => {
   res.status(200).json({ message: "Profile updated successfully" });
 };
 
-export { getProfile, updateBio, updateProfilePicture };
+export { getPersonalProfile, updateBio, updateProfilePicture };

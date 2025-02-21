@@ -8,11 +8,16 @@ import {
   userLogin,
   userLogout,
 } from "../controllers/user.controllers";
+import authenticationMiddleware from "../middlewares/authenticationMiddleware";
+// import authorizationMiddleware from "../middlewares/authorizationMiddleware";
 const userRoutes = express.Router();
 
-userRoutes.use("/profile", profileRoutes);
 userRoutes.post("/register", registerUser);
 userRoutes.post("/login", userLogin);
+
+userRoutes.use(authenticationMiddleware);
+
+userRoutes.use("/profile", profileRoutes);
 userRoutes.put("/profile", updatePersonalInfo);
 userRoutes.get("/:userId", getUserInfo);
 userRoutes.get("/:userId/timeline", getUserTimeline);

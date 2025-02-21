@@ -12,6 +12,6 @@ app.use(express.json());
 app.use(routes);
 
 app.get("/", (req, res) => {
-  res.status(400).json({ msg: "Hello from Express Server" });
+  res.status(200).json({ msg: "Hello from Express Server" });
 });
 app.listen(PORT);

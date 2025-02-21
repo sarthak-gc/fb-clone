@@ -1,13 +1,16 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import {
-  getProfile,
+  getPersonalProfile,
   updateBio,
   updateProfilePicture,
 } from "../controllers/profile.controllers";
+// import authorizationMiddleware from "../middlewares/authorizationMiddleware";
 
 const profileRoutes = express.Router();
 
-profileRoutes.get("/:id", getProfile);
+// profileRoutes.use(authorizationMiddleware);
+
+profileRoutes.get("/get", getPersonalProfile);
 profileRoutes.put("/bio", updateBio);
 profileRoutes.put("/picture", updateProfilePicture);
 
