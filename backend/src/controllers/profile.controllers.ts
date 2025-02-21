@@ -29,8 +29,8 @@ const updateBio = async (req: Request, res: Response) => {
 
   const updatedBio = await UserModel.findOneAndUpdate(
     { id: req.id },
-    { new: true },
-    { bio }
+    { bio },
+    { new: true, runValidators: true }
   ).select("bio");
 
   if (!updatedBio) {
@@ -51,7 +51,8 @@ const updateProfilePicture = async (req: Request, res: Response) => {
   }
   const user = await UserModel.findOneAndUpdate(
     { _id: req.id },
-    { profilePicture }
+    { profilePicture },
+    { new: true, runValidators: true }
   );
 
   if (!user) {

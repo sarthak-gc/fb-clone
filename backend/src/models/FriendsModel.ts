@@ -10,6 +10,7 @@ type friendT = {
   user1: mongoose.Types.ObjectId;
   user2: mongoose.Types.ObjectId;
   friendShipStatus: FriendShipStatus;
+  blockedBy: mongoose.Types.ObjectId;
   connectedDate: Date;
 };
 
@@ -21,7 +22,12 @@ const friend = new mongoose.Schema<friendT>(
     friendShipStatus: {
       type: String,
       enum: Object.values(FriendShipStatus),
-      default: FriendShipStatus.Active,
+      default: null,
+    },
+    blockedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
     connectedDate: { type: Date },
   },
@@ -31,3 +37,5 @@ const friend = new mongoose.Schema<friendT>(
 const FriendModel = mongoose.model("friend", friend);
 
 export default FriendModel;
+
+export { friendT, FriendShipStatus };

@@ -1,6 +1,7 @@
 import express from "express";
 import {
   acceptRequest,
+  blockPerson,
   getAllFriend,
   getAllRequests,
   rejectRequest,
@@ -18,5 +19,6 @@ connectionRoutes.post("/accept/:userId", acceptRequest);
 connectionRoutes.post("/reject/:userId", rejectRequest);
 connectionRoutes.get("/search/user/:name", searchUser);
 connectionRoutes.delete("/remove/:userId", unfriend);
+connectionRoutes.get("/block/:userId", blockPerson);
 connectionRoutes.get("/all", getAllFriend);
 export default connectionRoutes;

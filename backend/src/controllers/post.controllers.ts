@@ -116,7 +116,7 @@ const editPost = async (req: Request, res: Response) => {
   const updatedPost = await PostModel.findOneAndUpdate(
     { _id: postId },
     { content: postContent },
-    { new: true }
+    { new: true, runValidators: true }
   );
 
   if (!updatedPost) {
@@ -179,7 +179,7 @@ const likePost = async (req: Request, res: Response) => {
   const likedPost = (await PostModel.findOneAndUpdate(
     { _id: postId },
     { $inc: { reactions: 1 }, $push: { reactors: userId } },
-    { new: true }
+    { new: true, runValidators: true }
   )) as postT;
 
   if (!likedPost) {
@@ -235,7 +235,7 @@ const addPostComment = async (req: Request, res: Response) => {
   const post = await PostModel.findOneAndUpdate(
     { _id: postId },
     { $push: { comments: { user: userId, comment } } },
-    { new: true }
+    { new: true, runValidators: true }
   );
 
   const postComment = await CommentModel.create({

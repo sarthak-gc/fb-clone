@@ -29,3 +29,5 @@ const FriendReqSentModel = mongoose.model<friendRequestSentT>(
   FriendReqSent
 );
 export default FriendReqSentModel;
+
+export { friendRequestSentT, ReqSentStatus };

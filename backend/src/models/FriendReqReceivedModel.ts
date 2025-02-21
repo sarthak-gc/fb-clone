@@ -29,3 +29,5 @@ const FriendReqReceivedModel = mongoose.model<friendRequestReceivedT>(
   FriendReqReceived
 );
 export default FriendReqReceivedModel;
+
+export { friendRequestReceivedT, ReqReceived };
