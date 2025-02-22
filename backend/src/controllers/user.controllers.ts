@@ -1,9 +1,10 @@
-import { Response, Request } from "express";
+import { Request, Response } from "express";
 import UserModel from "../models/UserModel";
 import { Purpose, sendMail } from "./sendMail";
 // import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import OtpModel, { otpT, Reasons } from "../models/otpModel";
 
 dotenv.config();
 
@@ -71,36 +72,197 @@ const registerUser = async (req: Request, res: Response) => {
 
   const otp: number = Math.floor(100000 + Math.random() * 899999);
 
-  // await sendMail(email, "User Registration", Purpose.Registration, otp);
-
-  const otpReceived = otp;
-  // const { otpReceived } = req.body;
-  console.log(otpReceived, otp);
-  if (otp != otpReceived) {
-    res.status(400).json({ status: "error", message: "Invalid OTP" });
+  const existingOtp = await OtpModel.findOne({ email });
+  if (existingOtp) {
+    res
+      .status(400)
+      .json({ status: "error", message: "Otp already sent to your email" });
     return;
   }
 
-  const user = await UserModel.create({
+  await sendMail(email, "User Registration Request", Purpose.Registration, otp);
+
+  const savedOtp = await OtpModel.create({
     firstName,
     lastName,
     birthday,
     gender,
     email: normalizedEmail,
     password,
+    otp,
     bio: "",
+  });
+  if (!savedOtp) {
+    res.status(400).json({
+      status: "error",
+      message: "Error while creating otp for registration",
+    });
+    return;
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "Otp Sent Successfully for registration",
+  });
+};
+
+const verifyOtp = async (req: Request, res: Response) => {
+  const { type } = req.params;
+  const { email, otp } = req.body;
+  let reason: string;
+  if (type.toLowerCase().trim() == "resetpassword") {
+    reason = Reasons.PasswordReset;
+  } else if (type.toLowerCase().trim() == "register") {
+    reason = Reasons.Registration;
+  } else {
+    res.status(400).json({ status: "error", message: "Invalid Request" });
+    return;
+  }
+
+  const otpExists = (await OtpModel.findOne({
+    email,
+    reason,
+  })) as otpT;
+
+  if (!otpExists) {
+    res.status(404).json({
+      status: "error",
+      message:
+        reason === Reasons.Registration
+          ? "Please register first to get otp in your email"
+          : "Please send reset password request first",
+    });
+    return;
+  }
+
+  if (otpExists.otp !== otp) {
+    res.status(400).json({ status: "error", message: "Invalid Otp" });
+    return;
+  }
+
+  if (reason == Reasons.PasswordReset) {
+    const length = Math.floor(Math.random() * (12 - 8 + 1)) + 8;
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+=<>?";
+    let password = "";
+
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      password += characters[randomIndex];
+    }
+
+    const updatedUser = await UserModel.updateOne(
+      { email },
+      { password },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      res
+        .status(400)
+        .json({ status: "error", message: " Error while reseting password" });
+      return;
+    }
+
+    sendMail(
+      email,
+      "Password Reset",
+      Purpose.PasswordResetSuccessful,
+      undefined,
+      password
+    );
+    const deletePass = await OtpModel.findOneAndDelete({
+      email,
+      reason: Reasons.PasswordReset,
+    });
+
+    if (!deletePass) {
+      res.json({ status: "error", message: "Internal Error" });
+      return;
+    }
+    res
+      .status(200)
+      .json({ status: "success", message: "Password reset successful" });
+    return;
+  }
+
+  const user = await UserModel.create({
+    firstName: otpExists.firstName,
+    lastName: otpExists.lastName,
+    birthday: otpExists.birthday,
+    gender: otpExists.gender,
+    email: otpExists.email,
+    password: otpExists.password,
     // password: hashedPassword,
+    bio: "",
   });
 
+  if (!user) {
+    res
+      .status(400)
+      .json({ status: "error", message: "Error while creating user" });
+  }
+
+  await OtpModel.deleteOne({
+    email,
+    reason,
+  });
   const token = jwt.sign({ id: user._id }, secretKey, {
     expiresIn: "1h",
   });
+  await sendMail(
+    email,
+    "User Registration Successfull",
+    Purpose.RegistrationSuccessful
+  );
+
   res.status(200).json({
     status: "success",
     message: "New user registration successful",
     data: { token },
   });
-  return;
+};
+
+const resetPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const reqExists = await OtpModel.findOne({
+    email,
+    reason: Reasons.PasswordReset,
+  });
+
+  if (reqExists) {
+    res
+      .status(400)
+      .json({ status: "error", message: "Otp to reset password already send" });
+    return;
+  }
+
+  const otp: number = Math.floor(100000 + Math.random() * 899999);
+
+  const savedOtp = await OtpModel.create({
+    email: email.toLowerCase(),
+    otp,
+    reason: Reasons.PasswordReset,
+    firstName: "",
+    lastName: "",
+    birthday: "",
+    gender: "",
+    password: "",
+    bio: "",
+  });
+
+  if (!savedOtp) {
+    res.status(500).json({
+      status: "error",
+      message: "Error while creating OTP for password reset",
+    });
+    return;
+  }
+
+  await sendMail(email, "Password Reset Request", Purpose.PasswordReset, otp);
+  res
+    .status(200)
+    .json({ status: "success", message: "Otp sent for password reset" });
 };
 
 const userLogin = async (req: Request, res: Response) => {
@@ -186,6 +348,8 @@ const userLogout = (req: Request, res: Response) => {
 
 export {
   registerUser,
+  verifyOtp,
+  resetPassword,
   userLogin,
   updatePersonalInfo,
   getUserInfo,
