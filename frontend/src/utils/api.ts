@@ -22,11 +22,7 @@ interface RegistrationDataI {
 }
 
 export const handleRegistration = async (data: RegistrationDataI) => {
-  console.log(API_URL);
-
-  console.log("Data : ", data);
-  console.log("Registration Successful");
-  const response = await axios.get(`${API_URL}/user/register`, {
+  const response = await axios.post(`${API_URL}/user/register`, {
     data,
   });
   try {
@@ -34,6 +30,41 @@ export const handleRegistration = async (data: RegistrationDataI) => {
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
       console.error(error?.response?.data.message);
+    } else {
+      console.error("An unknown error occurred");
+    }
+  }
+};
+
+export const handleRegistrationOtpVerification = async (
+  email: string,
+  otp: string
+) => {
+  const response = await axios.post(`${API_URL}/user/register/verifyotp`, {
+    otp,
+    email,
+  });
+  try {
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      console.error(error?.response?.data.message);
+    } else {
+      console.error("An unknown error occurred");
+    }
+  }
+};
+
+export const handleLogin = async (email: string, password: string) => {
+  const response = await axios.post(`${API_URL}/user/login`, {
+    email,
+    password,
+  });
+  try {
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      return error.response?.data.message;
     } else {
       console.error("An unknown error occurred");
     }

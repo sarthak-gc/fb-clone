@@ -1,10 +1,18 @@
+import React from "react";
 import { Link } from "react-router-dom";
 
-const Footer = () => {
+interface colorI {
+  whatColor: string;
+}
+const Footer: React.FC<colorI> = ({ whatColor }) => {
   return (
     <div className="w-screen  flex justify-center ">
-      <div className="  w-[990px] pt-4 flex flex-col ">
-        <ul className="cssHere flex  gap-2 text-gray-600  mt-4  ">
+      <div
+        className={`cssHere w-[990px] pt-4 flex flex-col ${
+          whatColor == "blue" ? "blueCSShere" : "grayCSShere"
+        }`}
+      >
+        <ul className={"flex  gap-2 text-gray-600  mt-4"}>
           <li className="eng">
             <Link to="/">English (US)</Link>
           </li>

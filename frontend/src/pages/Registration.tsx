@@ -1,6 +1,6 @@
 import { ChangeEvent, useState, useEffect, JSX } from "react";
 import { userRegistrationStore } from ".././store/registrationStore";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { handleRegistration } from ".././utils/api";
 
 import { Gender, RegistrationDataI } from ".././types";
@@ -11,13 +11,14 @@ import InputField from "../components/Registration/InputField";
 import BirthdaySelection from "../components/Registration/BirthdaySelection";
 import GenderSelection from "../components/Registration/GenderSelection";
 import Information from "../components/Registration/TermsAndConditions";
+import { AxiosError } from "axios";
 
 const RegistrationPage = () => {
   const registrationData = userRegistrationStore((state) => state);
   const setRegistrationData = userRegistrationStore(
     (state) => state.setRegistrationData
   );
-
+  const navigate = useNavigate();
   const [birthday, setBirthday] = useState({
     month: "",
     day: "",
@@ -95,12 +96,22 @@ const RegistrationPage = () => {
       return;
     }
 
-    console.log(registrationData);
     try {
-      await handleRegistration(registrationData as RegistrationDataI);
-    } catch (error) {
-      console.error("Registration failed:", error);
-      alert("There was an error registering your account.");
+      const response = await handleRegistration(
+        registrationData as RegistrationDataI
+      );
+      if (response.message === "Otp Sent Successfully for registration") {
+        navigate("/verify-otp");
+      }
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        console.error("Registration failed:", error.response?.data.message);
+        alert(
+          `There was an error registering your account. \n${error.response?.data.message}`
+        );
+      } else {
+        alert("An unexpected error occurred.");
+      }
     }
   };
   return (
@@ -177,7 +188,7 @@ const RegistrationPage = () => {
                     />
                   </div>
                   <div className="w-full  flex justify-center py-[8px]">
-                    <Link to="/" className="text-[#1877f2] cursor-pointer">
+                    <Link to="/login" className="text-[#1877f2] cursor-pointer">
                       Already have an account ?
                     </Link>
                   </div>
@@ -187,7 +198,7 @@ const RegistrationPage = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      <Footer whatColor={"blue"} />
     </div>
   );
 };

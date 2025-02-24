@@ -86,7 +86,7 @@ export const sendMail = async (
   const htmlContent = getHtmlTemplate(purpose, otp, password);
   const text = getText(purpose, otp);
   const info = await transporter.sendMail({
-    from: '"Your Platform" <yourplatform.email@gmail.com>',
+    from: '"Facebook clone" <fbclone.np@gmail.com>',
     to: receiver,
     subject,
     text,

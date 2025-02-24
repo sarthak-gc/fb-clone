@@ -11,7 +11,8 @@ dotenv.config();
 const secretKey = process.env.JWT_PASS as string;
 
 const registerUser = async (req: Request, res: Response) => {
-  const { firstName, lastName, birthday, gender, email, password } = req.body;
+  const { firstName, lastName, birthday, gender, email, password } =
+    req.body.data;
 
   if (!firstName || !birthday || !gender || !email || !password) {
     res
@@ -25,7 +26,7 @@ const registerUser = async (req: Request, res: Response) => {
     return;
   }
 
-  if (gender != "male" && gender != "female" && gender != "other") {
+  if (gender != "Male" && gender != "Female" && gender != "Other") {
     res.status(400).json({ status: "error", message: "Invalid gender" });
     return;
   }
@@ -86,7 +87,7 @@ const registerUser = async (req: Request, res: Response) => {
     firstName,
     lastName,
     birthday,
-    gender,
+    gender: gender.toLowerCase(),
     email: normalizedEmail,
     password,
     otp,
@@ -135,7 +136,7 @@ const verifyOtp = async (req: Request, res: Response) => {
     return;
   }
 
-  if (otpExists.otp !== otp) {
+  if (otpExists.otp != otp) {
     res.status(400).json({ status: "error", message: "Invalid Otp" });
     return;
   }

@@ -40,7 +40,7 @@ const GenderSelection: React.FC<GenderSelectionI> = ({
         </label>
 
         <label
-          htmlFor="male"
+          htmlFor="other"
           className="border  border-[#ccd0d5] rounded-[4px] w-full  flex justify-between items-center px-[8px]"
         >
           <label htmlFor="other">Other</label>

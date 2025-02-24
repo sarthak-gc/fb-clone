@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
-.cssHere > li {
-  color: #385898;
+.cssHere > ul {
   font-size: 12px;
   line-height: 1.34;
   cursor: pointer;
@@ -13,4 +12,11 @@
 
 .eng > a {
   color: #737373;
+}
+
+.blueCSShere > ul {
+  color: #385898;
+}
+.grayCSShere > ul {
+  color: #8a8d91;
 }

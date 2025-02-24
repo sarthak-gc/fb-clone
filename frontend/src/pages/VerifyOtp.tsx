@@ -1,21 +1,21 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { userRegistrationStore } from ".././store/registrationStore";
 
 import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/OtpVerification/Header";
 import Footer from "../components/OtpVerification/Footer";
 import Input from "../components/OtpVerification/Input";
 import Information from "../components/OtpVerification/Information";
+import { handleRegistrationOtpVerification } from "../utils/api";
 const VerifyOtp = () => {
   const email = userRegistrationStore().email;
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const [otp, setOtp] = useState<string>("");
   const inputRef = useRef<HTMLInputElement | null>(null);
-  console.log(email);
-  console.log(inputRef);
+  const navigate = useNavigate();
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value.length <= 5) {
+    if (e.target.value.length <= 6) {
       setOtp(e.target.value);
     } else {
       if ((e.nativeEvent as InputEvent).inputType === "deleteContentBackward") {
@@ -23,7 +23,19 @@ const VerifyOtp = () => {
       }
     }
   };
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
+    if (otp.length === 6) {
+      const response = await handleRegistrationOtpVerification(email, otp);
+      if (response.message === "New user registration successful") {
+        alert("Congratulations!! Registration successful!!");
+        navigate("/home");
+      }
+    } else {
+      alert("Invalid OTP");
+    }
+  };
   return (
     <div className="h-screen bg-[#e9ebee]  overflow-scroll ">
       <Header />
@@ -34,7 +46,13 @@ const VerifyOtp = () => {
           </h2>
           <div className="  flex flex-col  shadow-md">
             <Information email={email} />
-            <form action="" className="w-full flex flex-col ">
+            <form
+              action=""
+              className="w-full flex flex-col  "
+              onSubmit={(e) => {
+                handleSubmit(e);
+              }}
+            >
               <div className=" px-[14px] w-full h-[58px] ">
                 <div
                   className={`w-1/3 h-full flex  items-center px-2 border-[1px] rounded-[4px] border-[#ccd0d5] ${
@@ -68,7 +86,7 @@ const VerifyOtp = () => {
                   Update contact info
                 </Link>
                 <button
-                  disabled={otp.length > 0}
+                  disabled={otp.length < 1}
                   className={`${
                     otp.length === 0
                       ? "bg-[#ebedf0] text-[#bec3c9] "

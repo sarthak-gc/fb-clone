@@ -32,3 +32,12 @@ export interface RegistrationStoreI {
     value: string | Date | Gender | null
   ) => void;
 }
+
+export interface LoginInfoI {
+  email: string;
+  password: string;
+}
+
+export interface LoginInfoStoreI extends LoginInfoI {
+  setLoginInfo: (target: "email" | "password", value: string) => void;
+}
